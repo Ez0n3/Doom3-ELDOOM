@@ -36,7 +36,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #define GAME_NAME						"DOOM 3"		// appears on window titles and errors
 
-#define ENGINE_VERSION					"DOOM 1.3"		// printed in console
+#define ENGINE_VERSION					"DOOM 1.3.1"	// printed in console
 
 // paths
 #define	CD_BASEDIR						"Doom"
@@ -110,7 +110,6 @@ If you have questions concerning this license or the applicable additional terms
 #define CDKEY_FILE						"doomkey"
 #define XPKEY_FILE						"xpkey"
 #define CDKEY_TEXT						"\n// Do not give this file to ANYONE.\n" \
-										"// id Software and Activision will NOT ask you to send this file to them.\n"
+										"// id Software or Zenimax will NEVER ask you to send this file to them.\n"
 
 #define CONFIG_SPEC						"config.spec"
-

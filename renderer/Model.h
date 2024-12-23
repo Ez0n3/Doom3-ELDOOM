@@ -233,7 +233,7 @@ public:
 	virtual int					Memory() const = 0;
 
 	// for reloadModels
-	virtual unsigned int		Timestamp() const = 0;
+	virtual ID_TIME_T				Timestamp() const = 0;
 
 	// returns the number of surfaces
 	virtual int					NumSurfaces() const = 0;

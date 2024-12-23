@@ -2613,7 +2613,6 @@ ID_INLINE bool idMatX::InverseSelf( void ) {
 		default:
 			return InverseSelfGeneric();
 	}
-	return false;
 }
 
 ID_INLINE idMatX idMatX::InverseFast( void ) const {

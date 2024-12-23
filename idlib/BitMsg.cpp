@@ -51,7 +51,6 @@ idBitMsg::idBitMsg() {
 	writeBit = 0;
 	readCount = 0;
 	readBit = 0;
-	numValueOverflows = 0;
 	allowOverflow = false;
 	overflowed = false;
 }
@@ -61,13 +60,14 @@ idBitMsg::idBitMsg() {
 idBitMsg::CheckOverflow
 ================
 */
-bool idBitMsg::CheckOverflow( int length ) {
-	if ( GetRemainingSpace() < length ) {
+bool idBitMsg::CheckOverflow( int numBits ) {
+	assert( numBits >= 0 );
+	if ( numBits > GetRemainingWriteBits() ) {
 		if ( !allowOverflow ) {
 			idLib::common->FatalError( "idBitMsg: overflow without allowOverflow set" );
 		}
-		if ( length > maxSize ) {
-			idLib::common->FatalError( "idBitMsg: %i is > full message size", length );
+		if ( numBits > ( maxSize << 3 ) ) {
+			idLib::common->FatalError( "idBitMsg: %i bits is > full message size", numBits );
 		}
 		idLib::common->Printf( "idBitMsg: overflow\n" );
 		BeginWriting();
@@ -93,7 +93,7 @@ byte *idBitMsg::GetByteSpace( int length ) {
 	WriteByteAlign();
 
 	// check for overflow
-	CheckOverflow( length );
+	CheckOverflow( length << 3 );
 
 	ptr = writeData + curSize;
 	curSize += length;
@@ -112,38 +112,40 @@ void idBitMsg::WriteBits( int value, int numBits ) {
 	int		fraction;
 
 	if ( !writeData ) {
-		idLib::common->FatalError( "idBitMsg::WriteBits: cannot write to message" );
+		idLib::common->Error( "idBitMsg::WriteBits: cannot write to message" );
 	}
 
 	// check if the number of bits is valid
 	if ( numBits == 0 || numBits < -31 || numBits > 32 ) {
-		idLib::common->FatalError( "idBitMsg::WriteBits: bad numBits %i", numBits );
-	}
-
-	// check for msg overflow
-	if ( CheckOverflow( ( numBits + writeBit ) >> 3 ) ) {
-		return;
+		idLib::common->Error( "idBitMsg::WriteBits: bad numBits %i", numBits );
 	}
 
 	// check for value overflows
+	// this should be an error really, as it can go unnoticed and cause either bandwidth or corrupted data transmitted
 	if ( numBits != 32 ) {
 		if ( numBits > 0 ) {
 			if ( value > ( 1 << numBits ) - 1 ) {
-				numValueOverflows++;
+				idLib::common->Warning( "idBitMsg::WriteBits: value overflow %d %d", value, numBits );
 			} else if ( value < 0 ) {
-				numValueOverflows++;
+				idLib::common->Warning( "idBitMsg::WriteBits: value overflow %d %d", value, numBits );
 			}
 		} else {
-			int r = 1 << ( numBits - 1 );
+			int r = 1 << ( - 1 - numBits );
 			if ( value > r - 1 ) {
-				numValueOverflows++;
+				idLib::common->Warning( "idBitMsg::WriteBits: value overflow %d %d", value, numBits );
 			} else if ( value < -r ) {
-				numValueOverflows++;
+				idLib::common->Warning( "idBitMsg::WriteBits: value overflow %d %d", value, numBits );
 			}
 		}
 	}
+
 	if ( numBits < 0 ) {
 		numBits = -numBits;
+	}
+
+	// check for msg overflow
+	if ( CheckOverflow( numBits ) ) {
+		return;
 	}
 
 	// write the bits
@@ -218,7 +220,7 @@ void idBitMsg::WriteNetadr( const netadr_t adr ) {
 	byte *dataPtr;
 	dataPtr = GetByteSpace( 4 );
 	memcpy( dataPtr, adr.ip, 4 );
-	WriteShort( adr.port );
+	WriteUShort( adr.port );
 }
 
 /*
@@ -252,7 +254,7 @@ void idBitMsg::WriteDeltaByteCounter( int oldValue, int newValue ) {
 	}
 	WriteBits( i, 3 );
 	if ( i ) {
-		WriteBits( newValue, i );
+		WriteBits( ( ( 1 << i ) - 1 ) & newValue, i );
 	}
 }
 
@@ -273,7 +275,7 @@ void idBitMsg::WriteDeltaShortCounter( int oldValue, int newValue ) {
 	}
 	WriteBits( i, 4 );
 	if ( i ) {
-		WriteBits( newValue, i );
+		WriteBits( ( ( 1 << i ) - 1 ) & newValue, i );
 	}
 }
 
@@ -294,7 +296,7 @@ void idBitMsg::WriteDeltaLongCounter( int oldValue, int newValue ) {
 	}
 	WriteBits( i, 5 );
 	if ( i ) {
-		WriteBits( newValue, i );
+		WriteBits( ( ( 1 << i ) - 1 ) & newValue, i );
 	}
 }
 
@@ -373,11 +375,6 @@ int idBitMsg::ReadBits( int numBits ) const {
 		idLib::common->FatalError( "idBitMsg::ReadBits: bad numBits %i", numBits );
 	}
 
-	// check for overflow
-	if ( ( ( ( curSize - readCount + 1 ) << 3 ) - readBit ) < numBits ) {
-		return -1;
-	}
-
 	value = 0;
 	valueBits = 0;
 
@@ -388,13 +385,18 @@ int idBitMsg::ReadBits( int numBits ) const {
 		sgn = false;
 	}
 
+	// check for overflow
+	if ( numBits > GetRemainingReadBits() ) {
+		return -1;
+	}
+
 	while ( valueBits < numBits ) {
 		if ( readBit == 0 ) {
 			readCount++;
 		}
 		get = 8 - readBit;
 		if ( get > (numBits - valueBits) ) {
-			get = (numBits - valueBits);
+			get = numBits - valueBits;
 		}
 		fraction = readData[readCount - 1];
 		fraction >>= readBit;
@@ -485,7 +487,7 @@ void idBitMsg::ReadNetadr( netadr_t *adr ) const {
 	for ( i = 0; i < 4; i++ ) {
 		adr->ip[ i ] = ReadByte();
 	}
-	adr->port = ReadShort();
+	adr->port = ReadUShort();
 }
 
 /*
@@ -595,11 +597,11 @@ int idBitMsg::DirToBits( const idVec3 &dir, int numBits ) {
 	bias = 0.5f / max;
 
 	bits = FLOATSIGNBITSET( dir.x ) << ( numBits * 3 - 1 );
-	bits |= ( (int) ( ( idMath::Fabs( dir.x ) + bias ) * max ) ) << ( numBits * 2 );
+	bits |= ( idMath::Ftoi( ( idMath::Fabs( dir.x ) + bias ) * max ) ) << ( numBits * 2 );
 	bits |= FLOATSIGNBITSET( dir.y ) << ( numBits * 2 - 1 );
-	bits |= ( (int) ( ( idMath::Fabs( dir.y ) + bias ) * max ) ) << ( numBits * 1 );
+	bits |= ( idMath::Ftoi( ( idMath::Fabs( dir.y ) + bias ) * max ) ) << ( numBits * 1 );
 	bits |= FLOATSIGNBITSET( dir.z ) << ( numBits * 1 - 1 );
-	bits |= ( (int) ( ( idMath::Fabs( dir.z ) + bias ) * max ) ) << ( numBits * 0 );
+	bits |= ( idMath::Ftoi( ( idMath::Fabs( dir.z ) + bias ) * max ) ) << ( numBits * 0 );
 	return bits;
 }
 
@@ -945,7 +947,7 @@ void idBitMsgDelta::ReadData( void *data, int length ) const {
 	} else {
 		char baseData[MAX_DATA_BUFFER];
 		assert( length < sizeof( baseData ) );
-		base->ReadData( baseData, sizeof( baseData ) );
+		base->ReadData( baseData, length );
 		if ( !readDelta || readDelta->ReadBits( 1 ) == 0 ) {
 			memcpy( data, baseData, length );
 		} else {

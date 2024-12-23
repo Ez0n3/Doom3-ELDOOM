@@ -61,7 +61,7 @@ public:
 							// Returns the length of the file.
 	virtual int				Length( void );
 							// Return a time value for reload operations.
-	virtual unsigned int	Timestamp( void );
+	virtual ID_TIME_T			Timestamp( void );
 							// Returns offset in file.
 	virtual int				Tell( void );
 							// Forces flush on files being writting to.
@@ -128,7 +128,7 @@ public:
 	virtual int				Read( void *buffer, int len );
 	virtual int				Write( const void *buffer, int len );
 	virtual int				Length( void );
-	virtual unsigned int	Timestamp( void );
+	virtual ID_TIME_T			Timestamp( void );
 	virtual int				Tell( void );
 	virtual void			ForceFlush( void );
 	virtual void			Flush( void );
@@ -170,7 +170,7 @@ public:
 	virtual int				Read( void *buffer, int len );
 	virtual int				Write( const void *buffer, int len );
 	virtual int				Length( void );
-	virtual unsigned int	Timestamp( void );
+	virtual ID_TIME_T			Timestamp( void );
 	virtual int				Tell( void );
 	virtual void			ForceFlush( void );
 	virtual void			Flush( void );
@@ -195,7 +195,7 @@ public:
 	virtual int				Read( void *buffer, int len );
 	virtual int				Write( const void *buffer, int len );
 	virtual int				Length( void );
-	virtual unsigned int	Timestamp( void );
+	virtual ID_TIME_T			Timestamp( void );
 	virtual int				Tell( void );
 	virtual void			ForceFlush( void );
 	virtual void			Flush( void );
@@ -226,7 +226,7 @@ public:
 	virtual int				Read( void *buffer, int len );
 	virtual int				Write( const void *buffer, int len );
 	virtual int				Length( void );
-	virtual unsigned int	Timestamp( void );
+	virtual ID_TIME_T			Timestamp( void );
 	virtual int				Tell( void );
 	virtual void			ForceFlush( void );
 	virtual void			Flush( void );

@@ -37,6 +37,8 @@ If you have questions concerning this license or the applicable additional terms
 ===============================================================================
 */
 
+class idStrPool;
+
 class idPoolStr : public idStr {
 	friend class idStrPool;
 

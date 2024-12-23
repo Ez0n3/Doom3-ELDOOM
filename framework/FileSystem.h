@@ -52,7 +52,7 @@ If you have questions concerning this license or the applicable additional terms
 ===============================================================================
 */
 
-static const unsigned	FILE_NOT_FOUND_TIMESTAMP	= 0xFFFFFFFF;
+static const ID_TIME_T		FILE_NOT_FOUND_TIMESTAMP	= 0xFFFFFFFF;
 static const int		MAX_PURE_PAKS				= 128;
 static const int		MAX_OSPATH					= 256;
 
@@ -217,7 +217,7 @@ public:
 							// As a quick check for existance. -1 length == not present.
 							// A 0 byte will always be appended at the end, so string ops are safe.
 							// The buffer should be considered read-only, because it may be cached for other uses.
-	virtual int				ReadFile( const char *relativePath, void **buffer, unsigned *timestamp = NULL ) = 0;
+	virtual int				ReadFile( const char *relativePath, void **buffer, ID_TIME_T *timestamp = NULL ) = 0;
 							// Frees the memory allocated by ReadFile.
 	virtual void			FreeFile( void *buffer ) = 0;
 							// Writes a complete file, will create any needed subdirectories.

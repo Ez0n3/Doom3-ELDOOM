@@ -33,6 +33,8 @@ If you have questions concerning this license or the applicable additional terms
 
 //-----------------------------------------------------
 
+#define ID_TIME_T time_t
+
 #ifdef _WIN32
 
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS	// prevent auto literal to string conversion
@@ -42,25 +44,33 @@ If you have questions concerning this license or the applicable additional terms
 
 #define WINVER				0x501
 
+#if 0
+// Dedicated server hits unresolved when trying to link this way now. Likely because of the 2010/Win7 transition? - TTimo
+
 #ifdef	ID_DEDICATED
 // dedicated sets windows version here
 #define	_WIN32_WINNT WINVER
 #define	WIN32_LEAN_AND_MEAN
 #else
-// non-dedicated includes MFC and sets windows verion here
+// non-dedicated includes MFC and sets windows version here
 #include "../tools/comafx/StdAfx.h"			// this will go away when MFC goes away
+#endif
+
+#else
+
+#include "../tools/comafx/StdAfx.h"
+
 #endif
 
 #include <winsock2.h>
 #include <mmsystem.h>
 #include <mmreg.h>
 
-#define DIRECTINPUT_VERSION  0x0700
+#define DIRECTINPUT_VERSION  0x0800			// was 0x0700 with the old mssdk
 #define DIRECTSOUND_VERSION  0x0800
 
-#include "../mssdk/include/dsound.h"
-#include "../mssdk/include/dinput.h"
-#include "../mssdk/include/dxerr8.h"
+#include <dsound.h>
+#include <dinput.h>
 
 #endif /* !GAME_DLL */
 #endif /* !_D3SDK */
@@ -68,6 +78,7 @@ If you have questions concerning this license or the applicable additional terms
 #pragma warning(disable : 4100)				// unreferenced formal parameter
 #pragma warning(disable : 4244)				// conversion to smaller type, possible loss of data
 #pragma warning(disable : 4714)				// function marked as __forceinline not inlined
+#pragma warning(disable : 4996)				// unsafe string operations
 
 #include <malloc.h>							// no malloc.h on mac or unix
 #include <windows.h>						// for qgl.h
@@ -100,10 +111,6 @@ If you have questions concerning this license or the applicable additional terms
 
 // id lib
 #include "../idlib/Lib.h"
-
-#if !defined( _D3SDK ) && defined( __WITH_PB__ )
-	#include "../punkbuster/pbcommon.h"
-#endif
 
 // framework
 #include "../framework/BuildVersion.h"
@@ -158,7 +165,7 @@ const int MAX_EXPRESSION_REGISTERS = 4096;
 #include "../tools/compilers/aas/AASFileManager.h"
 
 // game
-#if defined(_D3XP) && defined(GAME_DLL)
+#if defined(_D3XP)
 #include "../d3xp/Game.h"
 #else
 #include "../game/Game.h"

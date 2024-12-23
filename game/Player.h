@@ -682,6 +682,7 @@ private:
 	void					Event_HideTip( void );
 	void					Event_LevelTrigger( void );
 	void					Event_Gibbed( void );
+	void					Event_GetIdealWeapon( void );
 };
 
 ID_INLINE bool idPlayer::IsReady( void ) {

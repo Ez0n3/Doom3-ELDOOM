@@ -64,21 +64,18 @@ If you have questions concerning this license or the applicable additional terms
 // Mac OSX
 #if defined(MACOS_X) || defined(__APPLE__)
 
-#include "osx/apple_bool.h"
-
+#define BUILD_STRING				"MacOSX-universal"
+#define BUILD_OS_ID					1
 #ifdef __ppc__
-	#define BUILD_STRING				"MacOSX-ppc"
-	#define BUILD_OS_ID					1
 	#define	CPUSTRING					"ppc"
 	#define CPU_EASYARGS				0
 #elif defined(__i386__)
-	#define BUILD_STRING				"MacOSX-x86"
 	#define	CPUSTRING					"x86"
 	#define CPU_EASYARGS				1
 #endif
 
-//#define ALIGN16( x )					( (x) __attribute__ ((aligned (16))) )
-#define ALIGN16( x )					x
+#define ALIGN16( x )					x __attribute__ ((aligned (16)))
+
 #ifdef __MWERKS__
 #define PACKED
 #include <alloca.h>
@@ -371,9 +368,9 @@ void			Sys_ShowConsole( int visLevel, bool quitOnClose );
 
 
 void			Sys_Mkdir( const char *path );
-long			Sys_FileTimeStamp( FILE *fp );
+ID_TIME_T			Sys_FileTimeStamp( FILE *fp );
 // NOTE: do we need to guarantee the same output on all platforms?
-const char *	Sys_TimeStampToStr( long timeStamp );
+const char *	Sys_TimeStampToStr( ID_TIME_T timeStamp );
 const char *	Sys_DefaultCDPath( void );
 const char *	Sys_DefaultBasePath( void );
 const char *	Sys_DefaultSavePath( void );

@@ -57,6 +57,10 @@ public:
 
 	static void					Init( void );
 	static void					ShutDown( void );
+
+	// wrapper to idCommon functions 
+	static void					Error( const char *fmt, ... );
+	static void					Warning( const char *fmt, ... );
 };
 
 
@@ -150,6 +154,9 @@ public:
 	idException( const char *text = "" ) { strcpy( error, text ); }
 };
 
+// move from Math.h to keep gcc happy
+template<class T> ID_INLINE T	Max( T x, T y ) { return ( x > y ) ? x : y; }
+template<class T> ID_INLINE T	Min( T x, T y ) { return ( x < y ) ? x : y; }
 
 /*
 ===============================================================================
@@ -223,10 +230,7 @@ public:
 #include "containers/PlaneSet.h"
 
 // hashing
-#include "hashing/CRC8.h"
-#include "hashing/CRC16.h"
 #include "hashing/CRC32.h"
-#include "hashing/Honeyman.h"
 #include "hashing/MD4.h"
 #include "hashing/MD5.h"
 

@@ -45,10 +45,7 @@ Event are used for scheduling tasks and for linking script commands.
 #define	D_EVENT_ENTITY_NULL			'E'			// event can handle NULL entity pointers
 #define D_EVENT_TRACE				't'
 
-
-//ELDOOM MAX ENTITES
-#define MAX_EVENTS					4096 //8192
-
+#define MAX_EVENTS					4096
 
 class idClass;
 class idTypeInfo;

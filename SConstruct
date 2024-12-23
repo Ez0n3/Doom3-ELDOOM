@@ -15,7 +15,7 @@ conf_filename='site.conf'
 serialized=['CC', 'CXX', 'JOBS', 'BUILD', 'IDNET_HOST', 'GL_HARDLINK', 'DEDICATED',
 	'DEBUG_MEMORY', 'LIBC_MALLOC', 'ID_NOLANADDRESS', 'ID_MCHECK', 'ALSA',
 	'TARGET_CORE', 'TARGET_GAME', 'TARGET_D3XP', 'TARGET_MONO', 'TARGET_DEMO', 'NOCURL',
-	'BUILD_ROOT', 'BUILD_GAMEPAK', 'BASEFLAGS', 'PUNKBUSTER' ]
+	'BUILD_ROOT', 'BUILD_GAMEPAK', 'BASEFLAGS', 'SILENT' ]
 
 # global build mode ------------------------------
 
@@ -68,6 +68,9 @@ BASEFLAGS (default '')
 
 NOCONF (default 0, not saved)
 	ignore site configuration and use defaults + command line only
+	
+SILENT ( default 0, saved )
+	hide the compiler output, unless error
 """
 
 if ( not g_sdk ):
@@ -124,9 +127,6 @@ SDK (default 0, not saved)
 
 NOCURL (default 0)
 	set to 1 to disable usage of libcurl and http/ftp downloads feature
-
-PUNKBUSTER (default 1)
-	enable/disable punkbuster support
 """
 
 Help( help_string )
@@ -182,7 +182,7 @@ NOCONF = '0'
 NOCURL = '0'
 BUILD_GAMEPAK = '0'
 BASEFLAGS = ''
-PUNKBUSTER = '1'
+SILENT = '0'
 
 # end default settings ---------------------------
 
@@ -281,13 +281,20 @@ BASECPPFLAGS.append( BASEFLAGS )
 BASECPPFLAGS.append( '-pipe' )
 # warn all
 BASECPPFLAGS.append( '-Wall' )
+BASECPPFLAGS.append( '-Wno-unknown-pragmas' )
 # this define is necessary to make sure threading support is enabled in X
 CORECPPFLAGS.append( '-DXTHREADS' )
 # don't wrap gcc messages
 BASECPPFLAGS.append( '-fmessage-length=0' )
+# gcc 4.0
+BASECPPFLAGS.append( '-fpermissive' )
 
-if ( PUNKBUSTER == '1' ):
-	BASECPPFLAGS.append( '-D__WITH_PB__' )
+if ( g_os == 'Linux' ):
+	# gcc 4.x option only - only export what we mean to from the game SO
+	BASECPPFLAGS.append( '-fvisibility=hidden' )
+	# get the 64 bits machine on the distcc array to produce 32 bit binaries :)
+	BASECPPFLAGS.append( '-m32' )
+	BASELINKFLAGS.append( '-m32' )
 
 if ( g_sdk or SDK != '0' ):
 	BASECPPFLAGS.append( '-D_D3SDK' )
@@ -301,14 +308,12 @@ elif ( BUILD == 'debug' ):
 	if ( ID_MCHECK == '0' ):
 		ID_MCHECK = '1'
 elif ( BUILD == 'release' ):
-	# -fomit-frame-pointer: gcc manual indicates -O sets this implicitely,
-	# only if that doesn't affect debugging
-	# on Linux, this affects backtrace capability, so I'm assuming this is needed
+	# -fomit-frame-pointer: "-O also turns on -fomit-frame-pointer on machines where doing so does not interfere with debugging."
+	#   on x86 have to set it explicitely
 	# -finline-functions: implicit at -O3
-	# -fschedule-insns2: implicit at -O3
-	# -funroll-loops ?
-	# -mfpmath=sse -msse ?
-	OPTCPPFLAGS = [ '-O3', '-march=i686', '-Winline', '-ffast-math', '-fomit-frame-pointer', '-finline-functions', '-fschedule-insns2' ]
+	# -fschedule-insns2: implicit at -O2
+	# no-unsafe-math-optimizations: that should be on by default really. hit some wonko bugs in physics code because of that
+	OPTCPPFLAGS = [ '-O3', '-march=pentium3', '-Winline', '-ffast-math', '-fno-unsafe-math-optimizations', '-fomit-frame-pointer' ]
 	if ( ID_MCHECK == '0' ):
 		ID_MCHECK = '2'
 else:
@@ -337,16 +342,16 @@ if ( ID_MCHECK == '1' ):
 g_base_env = Environment( ENV = os.environ, CC = CC, CXX = CXX, LINK = LINK, CPPFLAGS = BASECPPFLAGS, LINKFLAGS = BASELINKFLAGS, CPPPATH = CORECPPPATH, LIBPATH = CORELIBPATH )
 scons_utils.SetupUtils( g_base_env )
 
-g_env = g_base_env.Copy()
+g_env = g_base_env.Clone()
 
 g_env['CPPFLAGS'] += OPTCPPFLAGS
 g_env['CPPFLAGS'] += CORECPPFLAGS
 g_env['LINKFLAGS'] += CORELINKFLAGS
 
-g_env_noopt = g_base_env.Copy()
+g_env_noopt = g_base_env.Clone()
 g_env_noopt['CPPFLAGS'] += CORECPPFLAGS
 
-g_game_env = g_base_env.Copy()
+g_game_env = g_base_env.Clone()
 g_game_env['CPPFLAGS'] += OPTCPPFLAGS
 g_game_env['CPPFLAGS'] += GAMECPPFLAGS
 
@@ -357,8 +362,11 @@ g_game_env.Append( CPPFLAGS = '-fno-strict-aliasing' )
 
 if ( int(JOBS) > 1 ):
 	print 'Using buffered process output'
-	scons_utils.SetupBufferedOutput( g_env )
-	scons_utils.SetupBufferedOutput( g_game_env )
+	silent = False
+	if ( SILENT == '1' ):
+		silent = True
+	scons_utils.SetupBufferedOutput( g_env, silent )
+	scons_utils.SetupBufferedOutput( g_game_env, silent )
 
 # mark the globals
 
@@ -377,7 +385,7 @@ local_idlibpic = 0
 # switch between base game build and d3xp game build
 local_d3xp = 0
 
-GLOBALS = 'g_env g_env_noopt g_game_env g_os ID_MCHECK ALSA idlib_objects game_objects local_dedicated local_gamedll local_demo local_idlibpic curl_lib local_curl local_d3xp PUNKBUSTER OPTCPPFLAGS'
+GLOBALS = 'g_env g_env_noopt g_game_env g_os ID_MCHECK ALSA idlib_objects game_objects local_dedicated local_gamedll local_demo local_idlibpic curl_lib local_curl local_d3xp OPTCPPFLAGS'
 
 # end general configuration ----------------------
 
@@ -410,9 +418,9 @@ if ( TARGET_CORE == '1' ):
 		local_dedicated = 0
 		Export( 'GLOBALS ' + GLOBALS )
 		
-		BuildDir( g_build + '/core/glimp', '.', duplicate = 1 )
+		VariantDir( g_build + '/core/glimp', '.', duplicate = 1 )
 		SConscript( g_build + '/core/glimp/sys/scons/SConscript.gl' )
-		BuildDir( g_build + '/core', '.', duplicate = 0 )
+		VariantDir( g_build + '/core', '.', duplicate = 0 )
 		idlib_objects = SConscript( g_build + '/core/sys/scons/SConscript.idlib' )
 		Export( 'GLOBALS ' + GLOBALS ) # update idlib_objects
 		doom = SConscript( g_build + '/core/sys/scons/SConscript.core' )
@@ -423,9 +431,9 @@ if ( TARGET_CORE == '1' ):
 		local_dedicated = 1
 		Export( 'GLOBALS ' + GLOBALS )
 		
-		BuildDir( g_build + '/dedicated/glimp', '.', duplicate = 1 )
+		VariantDir( g_build + '/dedicated/glimp', '.', duplicate = 1 )
 		SConscript( g_build + '/dedicated/glimp/sys/scons/SConscript.gl' )
-		BuildDir( g_build + '/dedicated', '.', duplicate = 0 )
+		VariantDir( g_build + '/dedicated', '.', duplicate = 0 )
 		idlib_objects = SConscript( g_build + '/dedicated/sys/scons/SConscript.idlib' )
 		Export( 'GLOBALS ' + GLOBALS )
 		doomded = SConscript( g_build + '/dedicated/sys/scons/SConscript.core' )
@@ -444,7 +452,7 @@ if ( TARGET_GAME == '1' or TARGET_D3XP == '1' ):
 		# clear the build directory to be safe
 		g_env.PreBuildSDK( [ g_build + '/game', g_build + '/d3xp' ] )
 		dupe = 1
-	BuildDir( g_build + '/game', '.', duplicate = dupe )
+	VariantDir( g_build + '/game', '.', duplicate = dupe )
 	idlib_objects = SConscript( g_build + '/game/sys/scons/SConscript.idlib' )
 	if ( TARGET_GAME == '1' ):
 		local_d3xp = 0
@@ -456,7 +464,7 @@ if ( TARGET_GAME == '1' or TARGET_D3XP == '1' ):
 	if ( TARGET_D3XP == '1' ):
 		# uses idlib as compiled for game/
 		local_d3xp = 1
-		BuildDir( g_build + '/d3xp', '.', duplicate = dupe )
+		VariantDir( g_build + '/d3xp', '.', duplicate = dupe )
 		Export( 'GLOBALS ' + GLOBALS )
 		d3xp = SConscript( g_build + '/d3xp/sys/scons/SConscript.game' )
 		game_d3xp = InstallAs( '#game%s-d3xp.so' % cpu, d3xp )
@@ -471,9 +479,9 @@ if ( TARGET_MONO == '1' ):
 	local_idlibpic = 0
 	local_d3xp = 0
 	Export( 'GLOBALS ' + GLOBALS )
-	BuildDir( g_build + '/mono/glimp', '.', duplicate = 1 )
+	VariantDir( g_build + '/mono/glimp', '.', duplicate = 1 )
 	SConscript( g_build + '/mono/glimp/sys/scons/SConscript.gl' )
-	BuildDir( g_build + '/mono', '.', duplicate = 0 )
+	VariantDir( g_build + '/mono', '.', duplicate = 0 )
 	idlib_objects = SConscript( g_build + '/mono/sys/scons/SConscript.idlib' )
 	game_objects = SConscript( g_build + '/mono/sys/scons/SConscript.game' )
 	Export( 'GLOBALS ' + GLOBALS )
@@ -490,9 +498,9 @@ if ( TARGET_DEMO == '1' ):
 	local_d3xp = 0
 	curl_lib = []
 	Export( 'GLOBALS ' + GLOBALS )
-	BuildDir( g_build + '/demo/glimp', '.', duplicate = 1 )
+	VariantDir( g_build + '/demo/glimp', '.', duplicate = 1 )
 	SConscript( g_build + '/demo/glimp/sys/scons/SConscript.gl' )
-	BuildDir( g_build + '/demo', '.', duplicate = 0 )
+	VariantDir( g_build + '/demo', '.', duplicate = 0 )
 	idlib_objects = SConscript( g_build + '/demo/sys/scons/SConscript.idlib' )
 	Export( 'GLOBALS ' + GLOBALS )
 	doom_demo = SConscript( g_build + '/demo/sys/scons/SConscript.core' )
@@ -501,7 +509,7 @@ if ( TARGET_DEMO == '1' ):
 	
 	local_idlibpic = 1
 	Export( 'GLOBALS ' + GLOBALS )
-	BuildDir( g_build + '/demo/game', '.', duplicate = 0 )
+	VariantDir( g_build + '/demo/game', '.', duplicate = 0 )
 	idlib_objects = SConscript( g_build + '/demo/game/sys/scons/SConscript.idlib' )
 	Export( 'GLOBALS ' + GLOBALS )
 	game_demo = SConscript( g_build + '/demo/game/sys/scons/SConscript.game' )

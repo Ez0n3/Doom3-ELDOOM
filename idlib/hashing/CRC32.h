@@ -1,4 +1,3 @@
-
 #ifndef __CRC32_H__
 #define __CRC32_H__
 

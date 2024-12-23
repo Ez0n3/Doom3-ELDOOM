@@ -22,8 +22,6 @@ idlib_string = ' \
 	geometry/TraceModel.cpp \
 	geometry/JointTransform.cpp \
 	hashing/CRC32.cpp \
-	hashing/CRC16.cpp \
-	hashing/Honeyman.cpp \
 	hashing/MD4.cpp \
 	hashing/MD5.cpp \
 	math/Angles.cpp \
@@ -59,8 +57,8 @@ idlib_list = scons_utils.BuildList( 'idlib', idlib_string )
 for i in range( len( idlib_list ) ):
 	idlib_list[ i ] = '../../' + idlib_list[ i ]
 
-local_env = g_env.Copy()
-local_env_noopt = g_env.Copy()
+local_env = g_env.Clone()
+local_env_noopt = g_env.Clone()
 
 # max allowed -O1
 flags = OPTCPPFLAGS
