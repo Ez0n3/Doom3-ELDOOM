@@ -4,14 +4,14 @@ ELDOOM is a single player Doom 3 campaign with lots of action which contains a f
 Using dhewm3 to play ELDOOM is highly recommended in-order to play at high resolutions like 4k with a proper aspect ratio. Not to mention all of the graphical enhancements the team at dhewm3 have added to the source port.  
 
 You can download ELDOOM from these locations:  
-https://www.moddb.com/mods/eldoom
-https://www.nexusmods.com/doom3/mods/1681
+https://www.moddb.com/mods/eldoom  
+https://www.nexusmods.com/doom3/mods/1681  
 
 You can download the latest version of dhewm3 here:  
-https://github.com/dhewm/dhewm3/releases/
+https://github.com/dhewm/dhewm3/releases/  
 
 The original Doom 3 can be purchased from Steam here:  
-https://store.steampowered.com/app/208200/DOOM_3/
+https://store.steampowered.com/app/208200/DOOM_3/  
 
 Note: ELDOOM does not currently with the the BFG edition.  
 
