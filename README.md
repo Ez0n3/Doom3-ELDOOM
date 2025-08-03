@@ -1,7 +1,9 @@
 # Doom3-ELDOOM
 ELDOOM is a single player Doom 3 campaign with lots of action which contains a full story from beginning to end. It makes use of high quality portal skies, large custom quality maps and features music from Sonic Mayhem and Bill Brown. It contains many new custom cinematics, animations, classic nightmare mode and much more!  
 
-Using dhewm3 to play ELDOOM is highly recommended in-order to play at high resolutions like 4k with a proper aspect ratio. Not to mention all of the graphical enhancements the team at dhewm3 have added to the source port.  
+**Using dhewm3 to play ELDOOM is highly recommended** in-order to play at high resolutions like 4k with a proper aspect ratio. Not to mention all of the graphical enhancements the team at dhewm3 have added to the source port.  
+
+## Downloads:
 
 You can download ELDOOM from these locations:  
 https://www.moddb.com/mods/eldoom  
@@ -13,6 +15,12 @@ https://github.com/dhewm/dhewm3/releases/
 The original Doom 3 can be purchased from Steam here:  
 https://store.steampowered.com/app/208200/DOOM_3/  
 
-Note: ELDOOM does not currently with the the BFG edition.  
+## Notes:
+* **This is not the full mod**, only the source code used to make the ELDOOM dll file. To download the full mod, see **Downloads:**  
 
-Have fun and enjoy o/  
+* **ELDOOM does not currently with the the BFG edition.**  
+
+* Have fun and enjoy o/  
+
+## Donate:
+If you enjoy and/or find this content useful, consider [buying me a coffee!](https://www.paypal.com/donate/?hosted_button_id=757K44LRCMVRW) :coffee:
