@@ -16,7 +16,7 @@ The original Doom 3 can be purchased from Steam here:
 https://store.steampowered.com/app/208200/DOOM_3/  
 
 ## Notes:
-* **This is not the full mod**, only the source code used to make the ELDOOM dll file. To download the full mod, see **Downloads:**  
+* **This is not the full mod**, only the source code used to make the ELDOOM dll file for **Doom3**. To download the full mod, see **Downloads:**  
 
 * **ELDOOM does not currently with the the BFG edition.**  
 
